@@ -16,7 +16,7 @@ const Button = ({
   return (
     <TouchableOpacity
       className={cn(
-        " w-full flex p-3 flex-row items-center justify-center shadow-md rounded-full shadow-neutral-400/70",
+        "w-full flex p-3 flex-row items-center justify-center shadow-md rounded-full shadow-neutral-400/70",
         getBgVariantStyle(bgVariant),
         className
       )}
@@ -25,7 +25,10 @@ const Button = ({
     >
       {IconLeft && <IconLeft />}
       <Text
-        className={cn("text-lg font-bold", getTextVariantStyle(textVariant))}
+        className={cn(
+          "text-lg text-white font-bold",
+          getTextVariantStyle(textVariant)
+        )}
       >
         {title}
       </Text>
