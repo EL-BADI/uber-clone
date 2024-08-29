@@ -17,8 +17,8 @@ const Button = ({
     <TouchableOpacity
       className={cn(
         "w-full flex p-3 flex-row items-center justify-center shadow-md rounded-full shadow-neutral-400/70",
-        getBgVariantStyle(bgVariant),
-        className
+        className,
+        getBgVariantStyle(bgVariant)
       )}
       onPress={onPress}
       {...props}

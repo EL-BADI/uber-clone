@@ -1,11 +1,13 @@
-import { View, Text, ScrollView, Image } from "react-native";
-import React from "react";
+import { View, Text, ScrollView, Image, Alert } from "react-native";
+import React, { useState } from "react";
 import { icons, images } from "@/constants";
 import InputField from "@/components/InputField";
 import { Controller, useForm } from "react-hook-form";
 import Button from "@/components/Button";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import OAuth from "@/components/OAuth";
+import { useSignUp } from "@clerk/clerk-expo";
+import Modal from "react-native-modal";
 
 type FormData = {
   name: string;
@@ -16,6 +18,7 @@ type FormData = {
 const SignUp = () => {
   const {
     control,
+    getValues,
     handleSubmit,
     formState: { errors },
   } = useForm({
@@ -25,7 +28,68 @@ const SignUp = () => {
       password: "",
     },
   });
-  const onSubmit = (data: FormData) => console.log(data);
+  const router = useRouter();
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const [verification, setVerification] = useState({
+    state: "default",
+    error: "",
+    code: "",
+  });
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const onSubmit = async (data: FormData) => {
+    if (!isLoaded) {
+      return;
+    }
+    try {
+      await signUp.create({
+        emailAddress: data.email,
+        password: data.password,
+      });
+
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setVerification((prev) => ({ ...prev, state: "pending" }));
+    } catch (err: any) {
+      setVerification((prev) => ({
+        ...prev,
+        error: err.errors[0].longMessage,
+        state: "faild",
+      }));
+      Alert.alert("Error", err.errors[0].longMessage);
+    }
+  };
+
+  const onPressVerify = async () => {
+    if (!isLoaded) {
+      return;
+    }
+
+    try {
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code: verification.code,
+      });
+
+      if (completeSignUp.status === "complete") {
+        // TODO: create db user
+        await setActive({ session: completeSignUp.createdSessionId });
+        setVerification((prev) => ({ ...prev, state: "success" }));
+      } else {
+        console.error(JSON.stringify(completeSignUp, null, 2));
+        setVerification((prev) => ({
+          ...prev,
+          error: "Verification faild!",
+          state: "faild",
+        }));
+      }
+    } catch (err: any) {
+      setVerification((prev) => ({
+        ...prev,
+        error: err.errors[0].longMessage,
+        state: "faild",
+      }));
+      Alert.alert("Error", err.errors[0].longMessage);
+    }
+  };
 
   return (
     <ScrollView className="flex-1 bg-white">
@@ -127,6 +191,61 @@ const SignUp = () => {
         </View>
 
         {/* verification modal */}
+        <Modal
+          isVisible={verification.state === "pending"}
+          onModalHide={() => {
+            if (verification.state === "success") {
+              setShowSuccessModal(true);
+            }
+          }}
+        >
+          <View className=" bg-white px-7 py-9 rounded-2xl min-h-[300px]">
+            <Text className=" font-JakartaExtraBold mb-2 text-2xl">
+              Verification
+            </Text>
+            <Text className=" font-Jakarta mb-5 ">
+              We've sent a verification code to {getValues("email")}
+            </Text>
+            <InputField
+              label="Code"
+              icon={icons.lock}
+              placeholder="123456"
+              value={verification.code}
+              keyboardType="numeric"
+              onChangeText={(code) => {
+                setVerification((prev) => ({ ...prev, code }));
+              }}
+            />
+            <Button
+              title="Verify Email"
+              onPress={onPressVerify}
+              className="mt-5 !bg-emerald-500"
+            />
+          </View>
+        </Modal>
+        <Modal isVisible={showSuccessModal}>
+          <View className=" bg-white px-7 py-9 rounded-2xl min-h-[300px]">
+            <Image
+              source={images.check}
+              className=" w-[110px] h-[110px] mx-auto my-5"
+            />
+            <Text className=" text-3xl font-JakartaBold text-center">
+              Verified
+            </Text>
+            <Text className=" text-base text-gray-400 font-Jakarta text-center mt-2">
+              You have successfully verfied your account
+            </Text>
+
+            <Button
+              title="Browse Home"
+              className=" mt-5"
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.replace("/(root)/(tabs)/Home");
+              }}
+            ></Button>
+          </View>
+        </Modal>
       </View>
     </ScrollView>
   );

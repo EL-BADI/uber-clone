@@ -15,7 +15,7 @@ export function getBgVariantStyle(variant: ButtonProps["bgVariant"]) {
     case "success":
       return "bg-emerald-500";
     case "outline":
-      return "bg-transparent border-neutral-300 !border-[0.5px]";
+      return "bg-transparent border-neutral-300 border";
     default:
       return "bg-[#0286ff]";
   }
