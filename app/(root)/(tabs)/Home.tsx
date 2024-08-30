@@ -1,23 +1,33 @@
-import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
-import { Link } from "expo-router";
-import { Text, View } from "react-native";
+import { View, Text } from "react-native";
+import React from "react";
+import Button from "@/components/Button";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useQuery } from "@tanstack/react-query";
 
-export default function Page() {
-  const { user } = useUser();
+const Home = () => {
+  async function fetchHello() {
+    const response = await fetch("/user");
+    const data = await response.json();
+    return data;
+  }
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["something"],
+    queryFn: fetchHello,
+  });
 
   return (
-    <View>
-      <SignedIn>
-        <Text>Hello {user?.emailAddresses[0].emailAddress}</Text>
-      </SignedIn>
-      <SignedOut>
-        <Link href="/(auth)/SignIn">
-          <Text>Sign In</Text>
-        </Link>
-        <Link href={"/(auth)/SignUp"}>
-          <Text>Sign Up</Text>
-        </Link>
-      </SignedOut>
-    </View>
+    <SafeAreaView>
+      <View>
+        <Text>Home</Text>
+        {isLoading ? (
+          <Text>Loading...</Text>
+        ) : (
+          <Text>{JSON.stringify(data)}</Text>
+        )}
+      </View>
+    </SafeAreaView>
   );
-}
+};
+
+export default Home;
