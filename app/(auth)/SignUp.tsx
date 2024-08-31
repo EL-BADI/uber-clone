@@ -8,6 +8,7 @@ import { Link, useRouter } from "expo-router";
 import OAuth from "@/components/OAuth";
 import { useSignUp } from "@clerk/clerk-expo";
 import Modal from "react-native-modal";
+import { useMutation } from "@tanstack/react-query";
 
 type FormData = {
   name: string;
@@ -37,6 +38,18 @@ const SignUp = () => {
   });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  const { mutateAsync: createUser } = useMutation({
+    mutationKey: ["sign_up:create_user"],
+    mutationFn: async (data: {
+      name: string;
+      email: string;
+      clerkId: string;
+    }) => {
+      console.log("+create user hit+");
+      await fetch("/user", { method: "POST", body: JSON.stringify(data) });
+    },
+  });
+
   const onSubmit = async (data: FormData) => {
     if (!isLoaded) {
       return;
@@ -52,10 +65,10 @@ const SignUp = () => {
     } catch (err: any) {
       setVerification((prev) => ({
         ...prev,
-        error: err.errors[0].longMessage,
+        error: err?.errors[0]?.longMessage,
         state: "faild",
       }));
-      Alert.alert("Error", err.errors[0].longMessage);
+      Alert.alert("Error", err?.errors[0]?.longMessage);
     }
   };
 
@@ -71,6 +84,12 @@ const SignUp = () => {
 
       if (completeSignUp.status === "complete") {
         // TODO: create db user
+        await createUser({
+          name: getValues("name"),
+          email: getValues("email"),
+          clerkId: completeSignUp.createdUserId as string,
+        });
+
         await setActive({ session: completeSignUp.createdSessionId });
         setVerification((prev) => ({ ...prev, state: "success" }));
       } else {
@@ -84,10 +103,9 @@ const SignUp = () => {
     } catch (err: any) {
       setVerification((prev) => ({
         ...prev,
-        error: err.errors[0].longMessage,
         state: "faild",
       }));
-      Alert.alert("Error", err.errors[0].longMessage);
+      Alert.alert("Error", JSON.stringify(err));
     }
   };
 

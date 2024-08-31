@@ -5,26 +5,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 
 const Home = () => {
-  async function fetchHello() {
-    const response = await fetch("/user");
-    const data = await response.json();
-    return data;
-  }
+  // async function fetchHello() {
+  //   const response = await fetch("/user");
+  //   const data = await response.json();
+  //   return data;
+  // }
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["something"],
-    queryFn: fetchHello,
-  });
+  // const { data, isLoading } = useQuery({
+  //   queryKey: ["something"],
+  //   queryFn: fetchHello,
+  // });
 
   return (
     <SafeAreaView>
       <View>
         <Text>Home</Text>
-        {isLoading ? (
-          <Text>Loading...</Text>
-        ) : (
-          <Text>{JSON.stringify(data)}</Text>
-        )}
       </View>
     </SafeAreaView>
   );
