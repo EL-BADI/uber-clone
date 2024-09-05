@@ -17,6 +17,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from "expo-location";
 
+import TomtomAuthComplete from "@/components/TomtomAuthComplete";
+
 const recentRides = [
   {
     ride_id: "1",
@@ -140,7 +142,14 @@ const Home = () => {
     }
   };
 
-  const handleDestinationPress = () => {};
+  const handleDestinationPress = (location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  }) => {
+    setDestinationLocation(location);
+    router.push("/(root)/FindRide");
+  };
 
   useEffect(() => {
     const reqLocation = async () => {
@@ -215,9 +224,13 @@ const Home = () => {
               </TouchableOpacity>
             </View>
 
-            <GoogleTextInput
+            {/* <GoogleTextInput
               icon={icons.search}
               containerStyle="bg-white shadow-md shadow-gray-300"
+              handlePress={handleDestinationPress}
+            /> */}
+            <TomtomAuthComplete
+              icon={icons.search}
               handlePress={handleDestinationPress}
             />
 
